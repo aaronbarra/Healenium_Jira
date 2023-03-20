@@ -1,0 +1,17 @@
+{
+     "fields": {
+        "project": {
+            "id": "11431",
+            "key": "ND"
+        },
+        "summary": "TITULOJSON",
+        "description": "DESCRIPCIONJSON, USUARIOS",
+        "issuetype": {
+            "name": "Test Execution"
+        }
+    },
+
+    "xrayFields": {
+        "testPlanKey": "ND-509" 
+    }
+}
