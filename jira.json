@@ -1,8 +1,8 @@
 {
      "fields": {
         "project": {
-            "id": "11431",
-            "key": "ND"
+            "id": "10000",
+            "key": "IXR"
         },
         "summary": "TITULOJSON",
         "description": "DESCRIPCIONJSON, USUARIOS",
@@ -12,6 +12,6 @@
     },
 
     "xrayFields": {
-        "testPlanKey": "ND-509" 
+        "testPlanKey": "IXR-144" 
     }
 }
