@@ -1,0 +1,104 @@
+pipeline {
+  agent any
+  tools {
+    gradle "gradle-7.6"
+    nodejs "node"
+  }
+  environment {
+    TESTPLAN = "IXR-94"
+    TAG = "@TEST_IXR-93"
+  }
+  stages {
+    stage('CleanWorkspace') {
+      steps {
+        cleanWs()
+      }
+    }
+    stage('Git') {
+      steps {
+        git branch: 'develop', url: 'https://github.com/dbustamanter/prueba.dibrsite.com.git'
+      }
+    }
+    stage('Pruebas unitarias') {
+      steps {
+        echo "$TESTPLAN"
+        echo "$TAG"
+        sh 'npm install'
+        script {
+            try {
+                def testResult = sh(returnStdout: true, script: 'npm install || exit 1')
+                echo "Resultado de la prueba: ${testResult}"
+            } catch (err) {
+                if (err instanceof hudson.AbortException && err.getMessage().contains("exit code 1")) {
+                    echo "La prueba falló. Por favor, revise su código."
+                    throw err
+                } else {
+                    echo "Prueba exitosa"
+                    throw err
+                }
+            }
+        }
+      }
+    }
+    stage('Deploy QA') {
+      steps {
+        sh 'cp -r $WORKSPACE/* /var/www/html/qa'
+      }
+    }
+    stage('Automatizacion') {
+      steps {
+        cleanWs()
+        git branch: 'master', url: 'https://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@github.com/dbustamanter/Healenium_POC.git'
+        //sh 'git clone -b integracionXray https://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@github.com/dbustamanter/Healenium_POC.git'
+        //sh 'cd /Healenium_POC'
+        sh 'pwd'
+        sh 'gradle runWithCucumber -P tags=@TEST_IXR-93'
+        sh 'chmod +x tokenXray.sh'
+        sh './tokenXray.sh'
+      }
+    }
+    /*
+    stage('Merge Master') {
+      steps {
+        sh "git config --global user.email 'Tsoft@tsoftglobal.com'"
+        sh "git config --global user.name 'Tsoft'"
+        sh "git add ."
+        sh "git commit -m 'env.$BUILD_TAG'"
+        sh "git checkout testing"
+        sh "git merge develop"
+        sh "git push https://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@github.com/dbustamanter/prueba.dibrsite.com.git"
+      }
+    }
+    */
+    /*stage('Deploy Prod') {
+      steps {
+        //cleanWs()
+        //git branch: 'testing', url: 'https://github.com/dbustamanter/prueba.dibrsite.com.git'
+        //sh 'cp -r $WORKSPACE/* /var/www/html/prod'
+        
+      }
+    }*/
+    /*stage('Xray') {
+      steps {
+        echo "xray"
+        sh 'sed -i "s|XRAY|${TESTPLAN}|g" $WORKSPACE/Info.json'
+        sh 'sed -i "s|LABEL|${COBERTURA}|g" $WORKSPACE/Info.json'
+        sh '''
+          token=$(curl -H "Content-Type: application/json" -X POST --data @"cloud_auth.json" https://xray.cloud.getxray.app/api/v2/authenticate| tr -d '"')
+          curl -H "Content-Type: multipart/form-data" -X POST -F info=@Info.json -F results=@src/test/resources/output/report/Cucumber.json -H "Authorization: Bearer $token" https://xray.cloud.getxray.app/api/v2/import/execution/cucumber/multipart > log.txt
+          '''
+        sh "cat log.txt"
+      }
+    }
+    stage('Jira') {
+      environment{
+        log = readJSON file: 'log.txt'
+        XRAYLOG = "${log.key}"
+      }
+      steps {
+        sh "chmod +x -R ${env.WORKSPACE}"
+        sh "IR=$XRAYLOG ./Attachment.sh IR"
+      }
+    }*/
+  }
+}
